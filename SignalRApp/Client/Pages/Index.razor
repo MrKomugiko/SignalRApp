@@ -1,0 +1,183 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.JsonPatch
+@using Microsoft.AspNetCore.SignalR.Client
+@using Newtonsoft.Json
+@using SignalRApp.Shared
+@using System.Text
+@implements IAsyncDisposable
+@inject NavigationManager NavigationManager;
+@inject HttpClient _http;
+
+<div>
+    <h2 style="text-align:center;">
+        'ASP.NET Core <u>SignalR</u>'
+    </h2>
+    <p style="width:fit-content; margin-left:auto; margin-right:auto;">
+        <b>What:</b> An example of locking an item when someone is currently using it. <br />
+        <b>How:</b> Open the page in another browser window or tab. <br />
+        The SignalR library, using WebSockets, will synchronize the data in real time.
+    </p>
+</div>
+
+@if(Items != null)
+{
+    <table class="table table-striped" style="width:100%; vertical-align:middle;">
+        <thead>
+            <tr>
+                <th style="min-width:55px;">state</th>
+                <th style="min-width:100px;">@nameof(Item.name)</th>
+                <th style="min-width:200px;">@nameof(Item.value)</th>
+                <th style="min-width:200px;">@nameof(Item.created)</th>
+                <th style="min-width:200px;">@nameof(Item.updated)</th>
+                <th style="width:100%;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Items)
+            {
+                <tr>
+                    @{
+                        bool isLocekd = Global_LockedItems.Contains(item.Id);
+                        bool isOpened = Local_OpenedItems.Contains(item.Id);
+
+                        string lockIcon = isLocekd ? "lock-icon" : isOpened ? "unlock-icon" : string.Empty;
+                    }
+                    <td>
+                       <div class="@lockIcon"></div>
+
+                    </td>
+                    <td>@item.name</td>
+                    <td>@item.value</td>
+                    <td>@item.created</td>
+                    <td>@item.updated</td>
+                    <td>
+                        @if(isLocekd == false)
+                        {
+                            if(Local_OpenedItems.Contains(item.Id))
+                            {
+                                <button class="btn btn-primary btn-sm" disabled="@isLocekd" @onclick="async(e)=>{if(!isLocekd)await Update(item.Id);}">
+                                    UpdateValue
+                                </button>
+                                <button class="btn btn-primary btn-sm" disabled="@isLocekd" @onclick="async(e)=>{if(!isLocekd)await Close(item.Id);}">
+                                    CLOSE
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-primary btn-sm" disabled="@isLocekd" @onclick="async(e)=>{if(!isLocekd)await Open(item.Id);}" >
+                                    OPEN
+                                </button>
+                            }
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code{
+    HashSet<Guid> Global_LockedItems { get; set; } = new();
+    HashSet<Guid> Local_OpenedItems { get; set; } = new();
+
+    List<Item> Items { get; set; } = new();
+    HubConnection? Connection;
+    Random rng = new Random();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Items = (await _http.GetFromJsonAsync<List<Item>>("Items/GetAll")) ?? new(); 
+
+        Connection = new HubConnectionBuilder()
+        .WithUrl(NavigationManager.ToAbsoluteUri("/NotificationHub"))
+        .WithAutomaticReconnect()
+        .Build();
+
+        Connection.On<Guid>("itemChanged", onItemChanged);
+        Connection.On<Guid>("itemIsInUse", onItemIsInUse);
+        Connection.On<Guid>("itemNoMoreInUse", onItemNoMoreInUse);
+        
+        await Connection.StartAsync();
+        Global_LockedItems = await Connection.InvokeAsync<HashSet<Guid>>("connect");
+
+        StateHasChanged();
+    }
+
+    private async Task onItemChanged(Guid _itemId)
+    {
+        var request = await _http.GetAsync($"Items/Get?id={_itemId}");
+        request.EnsureSuccessStatusCode();
+        Item? updatedItem = await request.Content.ReadFromJsonAsync<Item>();
+        if (updatedItem is null)
+        {
+            Console.WriteLine("Couldn't read Item from a api response");
+            return;
+        }
+
+        int index = Items.FindIndex(item => item.Id == updatedItem.Id);  // Assuming Item has an Id property
+
+        if (index != -1)
+        {
+            // Replace the old item with the new item at the found index
+            Items[index] = updatedItem;
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine($"Eror, item with id: [{_itemId}] not exist in the list");
+        }
+        Console.WriteLine($"Item: {_itemId} changed. need to be refreshed/updated from server");
+    }
+    private Task onItemIsInUse(Guid _itemId)
+    {
+        Global_LockedItems.Add(_itemId);
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+    private Task onItemNoMoreInUse(Guid _itemId)
+    {
+        Global_LockedItems.Remove(_itemId);
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task Update(Guid _itemId)
+    {
+        var newValue = rng.NextInt64();
+        Item item = Items.First(x => x.Id == _itemId);
+        //var patchDoc = new JsonPatchDocument<Item>();
+        //patchDoc.Replace(x=>x.value, newValue.ToString());
+
+        //var serializedDoc = JsonConvert.SerializeObject(patchDoc);
+        //var requestContent = new StringContent(serializedDoc, Encoding.UTF8, "application/json-patch+json");
+        //var response = await _http.PatchAsync($"Items?Id={item.Id}", requestContent);
+
+        item.value = newValue.ToString();
+        var response = await _http.PostAsJsonAsync<Item>($"Items?Id={item.Id}", item);
+
+    }
+    private async Task Open(Guid _itemId)
+    {
+        if(Connection is null) return;
+
+        await Connection.InvokeAsync("NotifyOthersItemWasOpened", _itemId );
+        Local_OpenedItems.Add(_itemId);
+
+    }
+    private async Task Close(Guid _itemId)
+    {
+        if(Connection is null) return;
+
+        await Connection.InvokeAsync("NotifyOthersItemWasClosed", _itemId );
+        Local_OpenedItems.Remove(_itemId);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if(Connection != null)
+        {
+            await Connection.DisposeAsync();
+        }
+    }
+}
