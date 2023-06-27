@@ -30,3 +30,23 @@ jobs:
           file: ./SignalRApp/Server/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
+          
+  pull:
+    needs: build
+    runs-on: 
+      labels: ASUS-MRKOMUGIKO
+    steps:
+      -
+        name: Pull
+        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
+
+  deploy:
+    needs: pull
+    runs-on:
+      labels: ASUS-MRKOMUGIKO
+    steps:
+      -
+        name: Deploy
+        run: docker run -d -p 8080:80 --name blazor_signalrapp ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
+        
+    
