@@ -54,5 +54,13 @@ jobs:
       -
         name: Deploy
         run: docker run -d -p 8080:80 --name blazor_signalrapp ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
-        
-    
+      -
+        name: Start ngrok tunell
+        run: ngrok http 8080
+      -
+        name: Get public address
+        shell: pwsh
+        run: |
+          $WebResponse = Invoke-WebRequest -Uri "http://localhost:4040/api/tunnels"
+          $release = ConvertFrom-Json $WebResponse.content
+          $release.tunnels[0].public_url
