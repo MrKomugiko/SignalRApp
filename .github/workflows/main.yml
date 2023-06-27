@@ -59,7 +59,7 @@ jobs:
           docker run -d -p 8080:80 --name blazor_signalrapp ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
       -
         name: Start ngrok tunell
-        run: ngrok http 8080
+        run: start cmd /c "ngrok http 80"
       -
         name: Get public address
         shell: pwsh
