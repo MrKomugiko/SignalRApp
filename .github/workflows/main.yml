@@ -53,7 +53,10 @@ jobs:
     steps:
       -
         name: Deploy
-        run: docker run -d -p 8080:80 --name blazor_signalrapp ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
+        run: |
+          docker stop blazor_signalrapp
+          docker rm blazor_signalrapp
+          docker run -d -p 8080:80 --name blazor_signalrapp ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
       -
         name: Start ngrok tunell
         run: ngrok http 8080
