@@ -10,8 +10,11 @@ WORKDIR /src
 COPY ["SignalRApp/Server/SignalRApp.Server.csproj", "SignalRApp/Server/"]
 COPY ["SignalRApp/Client/SignalRApp.Client.csproj", "SignalRApp/Client/"]
 COPY ["SignalRApp/Shared/SignalRApp.Shared.csproj", "SignalRApp/Shared/"]
-COPY ["./SignalRApp.Tests/SignalRApp.Tests.csproj", "./SignalRApp.Tests/"]
+COPY ["SignalRApp.Tests/SignalRApp.Tests.csproj", "SignalRApp.Tests/"]
+
 RUN dotnet restore "SignalRApp/Server/SignalRApp.Server.csproj"
+RUN dotnet restore "SignalRApp.Tests/SignalRApp.Tests.csproj"
+
 COPY . .
 WORKDIR "/src/SignalRApp/Server"
 RUN dotnet build "SignalRApp.Server.csproj" -c Release -o /app/build
