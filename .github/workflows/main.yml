@@ -4,66 +4,58 @@ on:
   push:
     branches:
       - "master"
+  pull_request:
+    branches:
+      - "master"
 
 jobs:
-  build:
-    runs-on: 
-      labels: ASUS-MRKOMUGIKO
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v3
-      -
-        name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      -
-        name: Build and push
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./SignalRApp/Server/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
-          
-  pull:
-    needs: build
-    runs-on: 
-      labels: ASUS-MRKOMUGIKO
-    steps:
-      -
-        name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Pull
-        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
-      
-  deploy:
-    needs: pull
+  build-docker:
     runs-on:
       labels: ASUS-MRKOMUGIKO
     steps:
-      -
-        name: Deploy
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build Docker image
+        run: |
+          docker buildx build -t ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest ./SignalRApp/Server
+
+  test:
+    needs: build-docker
+    runs-on:
+      labels: ASUS-MRKOMUGIKO
+    steps:
+      - name: Run tests on Docker image
+        run: |
+          docker run -v $(pwd):/app -w /app --rm ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest dotnet test --configuration Release
+
+  docker-push:
+    needs: test
+    runs-on:
+      labels: ASUS-MRKOMUGIKO
+    steps:
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
+
+  deploy:
+    needs: docker-push
+    runs-on:
+      labels: ASUS-MRKOMUGIKO
+    steps:
+      - name: Stop and remove existing container
         run: |
           docker stop blazor_signalrapp
           docker rm blazor_signalrapp
+      - name: Pull Docker image
+        run: |
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
+      - name: Deploy
+        run: |
           docker run -d -p 8080:80 --name blazor_signalrapp ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
-#      -
-#        name: Start ngrok tunell
-#        run: start cmd /c "ngrok http 80"
-#      -
-#        name: Get public address
-#        shell: pwsh
-#        run: |
-#          $WebResponse = Invoke-WebRequest -Uri "http://localhost:4040/api/tunnels"
-#          $release = ConvertFrom-Json $WebResponse.content
-#          $release.tunnels[0].public_url
