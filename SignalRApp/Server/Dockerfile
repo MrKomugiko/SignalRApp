@@ -23,14 +23,14 @@ COPY . .
 # Build the Blazor hosted application and publish it
 WORKDIR "/src/SignalRApp/Server"
 RUN dotnet build "SignalRApp.Server.csproj" -c Release -o "/app/build"
+WORKDIR "/src/SignalRApp.Tests"
+RUN echo "Running unit tests..."
+RUN dotnet test --logger "console;verbosity=detailed" || echo "Unit tests failed!"
+RUN test $? -eq 0 || exit 1
 
 FROM build AS publish
+WORKDIR "/src/SignalRApp/Server"
 RUN dotnet publish "SignalRApp.Server.csproj" -c Release -o "/app/publish"
-
-# Test stage
-FROM build AS test
-WORKDIR "/src/SignalRApp.Tests"
-RUN dotnet test --logger "console;verbosity=detailed"
 
 # Runtime stage
 FROM "mcr.microsoft.com/dotnet/aspnet:6.0" AS runtime

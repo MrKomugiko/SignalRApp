@@ -25,9 +25,6 @@ jobs:
       - name: Build Docker image
         run: |
           docker buildx build -t ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest -f ./SignalRApp/Server/Dockerfile .
-      - name: Run tests on Docker image
-        run: |
-          docker run -v $(pwd)/SignalRApp.Tests:/app/SignalRApp.Tests -w /app --rm ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest dotnet test -console-logger "console;verbosity=detailed" --configuration Release
 
   docker-push:
     needs: build-docker

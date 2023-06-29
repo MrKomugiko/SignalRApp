@@ -17,4 +17,10 @@ public class StorageServiceTests
         Storage _storage = new();
         Assert.True(_storage.AllItems.DistinctBy(x=>x.Id).Count() == _storage.AllItems.Count);
     }
+
+    [Fact]
+    public void error()
+    {
+        Assert.True(false);
+    }
 }
