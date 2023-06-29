@@ -8,13 +8,13 @@ EXPOSE 443
 FROM "mcr.microsoft.com/dotnet/sdk:6.0" AS build
 WORKDIR "/src"
 # Copy and restore the Blazor hosted application
-COPY "SignalRApp/Server/*.csproj" "SignalRApp/Server/"
-COPY "SignalRApp/Client/*.csproj" "SignalRApp/Client/"
-COPY "SignalRApp/Shared/*.csproj" "SignalRApp/Shared/"
+COPY "SignalRApp/Server/SignalRApp.Server.csproj" "SignalRApp/Server/"
+COPY "SignalRApp/Client/SignalRApp.Client.csproj" "SignalRApp/Client/"
+COPY "SignalRApp/Shared/SignalRApp.Shared.csproj" "SignalRApp/Shared/"
 RUN dotnet restore "SignalRApp/Server/SignalRApp.Server.csproj"
 
 # Copy and restore the xUnit test project
-COPY "SignalRApp.Tests/*.csproj" "SignalRApp.Tests/"
+COPY "SignalRApp.Tests/SignalRApp.Tests.csproj" "SignalRApp.Tests/"
 RUN dotnet restore "SignalRApp.Tests/SignalRApp.Tests.csproj"
 
 # Copy the remaining project files
