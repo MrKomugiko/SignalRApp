@@ -24,7 +24,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
       - name: Build Docker image
         run: |
-          docker buildx build -t ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest ./SignalRApp/Server
+          docker buildx build -t ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest -f ./SignalRApp/Server/Dockerfile
 
   test:
     needs: build-docker
@@ -33,7 +33,7 @@ jobs:
     steps:
       - name: Run tests on Docker image
         run: |
-          docker run -v $(pwd):/app -w /app --rm ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest dotnet test --configuration Release
+          docker run -v $(pwd):/app -w /app --rm ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest dotnet test --console-logger "console;verbosity=detailed" --configuration Release
 
   docker-push:
     needs: test
