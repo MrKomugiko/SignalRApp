@@ -14,7 +14,7 @@ COPY "SignalRApp/Shared/SignalRApp.Shared.csproj" "SignalRApp/Shared/"
 RUN dotnet restore "SignalRApp/Server/SignalRApp.Server.csproj"
 
 # Copy and restore the xUnit test project
-COPY "./SignalRApp.Tests/SignalRApp.Tests.csproj" "./SignalRApp.Tests/"
+COPY "./SignalRApp.Tests/SignalRApp.Tests.csproj" "SignalRApp.Tests/"
 RUN dotnet restore "./SignalRApp.Tests/SignalRApp.Tests.csproj"
 
 # Copy the remaining project files
@@ -30,7 +30,7 @@ RUN dotnet publish "SignalRApp.Server.csproj" -c Release -o "/app/publish"
 # Test stage
 FROM build AS test
 WORKDIR "/src/SignalRApp.Tests"
-RUN dotnet test --console-logger "console;verbosity=detailed"
+RUN dotnet test --logger "console;verbosity=detailed"
 
 # Runtime stage
 FROM "mcr.microsoft.com/dotnet/aspnet:6.0" AS runtime
