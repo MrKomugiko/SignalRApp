@@ -14,8 +14,8 @@ COPY "SignalRApp/Shared/SignalRApp.Shared.csproj" "SignalRApp/Shared/"
 RUN dotnet restore "SignalRApp/Server/SignalRApp.Server.csproj"
 
 # Copy and restore the xUnit test project
-COPY "SignalRApp.Tests/SignalRApp.Tests.csproj" "SignalRApp.Tests/"
-RUN dotnet restore "SignalRApp.Tests/SignalRApp.Tests.csproj"
+COPY "./SignalRApp.Tests/SignalRApp.Tests.csproj" "./SignalRApp.Tests/"
+RUN dotnet restore "./SignalRApp.Tests/SignalRApp.Tests.csproj"
 
 # Copy the remaining project files
 COPY . .
