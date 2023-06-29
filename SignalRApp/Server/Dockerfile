@@ -5,21 +5,35 @@ WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
-WORKDIR /src
-COPY ["SignalRApp/Server/SignalRApp.Server.csproj", "SignalRApp/Server/"]
-COPY ["SignalRApp/Client/SignalRApp.Client.csproj", "SignalRApp/Client/"]
-COPY ["SignalRApp/Shared/SignalRApp.Shared.csproj", "SignalRApp/Shared/"]
-COPY ["SignalRApp.Tests/*.csproj", "SignalRApp.Tests/"]
+FROM "mcr.microsoft.com/dotnet/sdk:6.0" AS build
+WORKDIR "/src"
+# Copy and restore the Blazor hosted application
+COPY "SignalRApp/Server/*.csproj" "SignalRApp/Server/"
+COPY "SignalRApp/Client/*.csproj" "SignalRApp/Client/"
+COPY "SignalRApp/Shared/*.csproj" "SignalRApp/Shared/"
 RUN dotnet restore "SignalRApp/Server/SignalRApp.Server.csproj"
+
+# Copy and restore the xUnit test project
+COPY "SignalRApp.Tests/*.csproj" "SignalRApp.Tests/"
+RUN dotnet restore "SignalRApp.Tests/SignalRApp.Tests.csproj"
+
+# Copy the remaining project files
 COPY . .
+
+# Build the Blazor hosted application and publish it
 WORKDIR "/src/SignalRApp/Server"
-RUN dotnet build "SignalRApp.Server.csproj" -c Release -o /app/build
+RUN dotnet build "SignalRApp.Server.csproj" -c Release -o "/app/build"
 
 FROM build AS publish
-RUN dotnet publish "SignalRApp.Server.csproj" -c Release -o /app/publish
+RUN dotnet publish "SignalRApp.Server.csproj" -c Release -o "/app/publish"
 
-FROM base AS final
+# Test stage
+FROM build AS test
+WORKDIR "/src/SignalRApp.Tests"
+RUN dotnet test --console-logger "console;verbosity=detailed"
+
+# Runtime stage
+FROM "mcr.microsoft.com/dotnet/aspnet:6.0" AS runtime
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=publish "/app/publish" .
 ENTRYPOINT ["dotnet", "SignalRApp.Server.dll"]
