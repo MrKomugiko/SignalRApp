@@ -47,8 +47,11 @@ jobs:
     steps:
       - name: Stop and remove existing container
         run: |
-          docker stop blazor_signalrapp
-          docker rm blazor_signalrapp
+          # Opcjonalnie
+          docker container prune -f
+          # Zatrzymaj i usuń kontener
+          docker stop blazor_signalrapp || true
+          docker rm blazor_signalrapp || true
       - name: Pull Docker image
         run: |
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
