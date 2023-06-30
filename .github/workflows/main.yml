@@ -45,16 +45,17 @@ jobs:
     runs-on:
       labels: ASUS-MRKOMUGIKO
     steps:
-      - name: Stop and remove existing container
+      - name: clear unused container
         run: |
           # Opcjonalnie
           docker container prune -f
-          # Zatrzymaj i usuń kontener
-          docker stop blazor_signalrapp || true
-          docker rm blazor_signalrapp || true
       - name: Pull Docker image
         run: |
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
       - name: Deploy
         run: |
+          # Zatrzymaj i usuń kontener jezeli istnieje
+          docker stop blazor_signalrapp
+          docker rm blazor_signalrapp
+          # zamontuj i uruchom kontener
           docker run -d -p 8080:80 --name blazor_signalrapp ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
