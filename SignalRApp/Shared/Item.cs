@@ -8,8 +8,8 @@ namespace SignalRApp.Shared;
 
 public class Item{
     public Guid Id { get; set; }
-    public String name { get; set; }
-    public String value { get; set; }    
-    public DateTime created { get; set; }
-    public DateTime updated { get; set; }
+    public String? Name { get; set; }
+    public String? Value { get; set; }    
+    public DateTime Created { get; set; }
+    public DateTime Updated { get; set; }
 }

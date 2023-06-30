@@ -44,7 +44,7 @@ public class ItemsController : ControllerBase
 
         if (index != -1)
         {
-            updatedItem.updated = DateTime.Now;
+            updatedItem.Updated = DateTime.Now;
             _storage.AllItems[index] = updatedItem;
         }
         else

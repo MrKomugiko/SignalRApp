@@ -13,24 +13,24 @@ public class Storage
         {
             new Item {
                 Id = Guid.NewGuid(),
-                created = DateTime.Now,
-                updated = DateTime.Now,
-                name = "Item 1",
-                value = "1"
+                Created = DateTime.Now,
+                Updated = DateTime.Now,
+                Name = "Item 1",
+                Value = "1"
             },
             new Item {
                 Id = Guid.NewGuid(),
-                created = DateTime.Now,
-                updated = DateTime.Now,
-                name = "Item 2",
-                value = "2"
+                Created = DateTime.Now,
+                Updated = DateTime.Now,
+                Name = "Item 2",
+                Value = "2"
             },
             new Item {
                 Id = Guid.NewGuid(),
-                created = DateTime.Now,
-                updated = DateTime.Now,
-                name = "Item 3",
-                value = "3"
+                Created = DateTime.Now,
+                Updated = DateTime.Now,
+                Name = "Item 3",
+                Value = "3"
             }
         };
     }

@@ -27,7 +27,7 @@ RUN dotnet build "SignalRApp.Server.csproj" -c Release -o "/app/build"
 FROM build AS unit-tests
 WORKDIR "/src/SignalRApp.Tests"
 RUN echo "Running unit tests..."
-RUN dotnet test --logger "console;verbosity=detailed" --no-build || exit 1
+RUN dotnet test "SignalRApp.Tests.csproj" --logger "console;verbosity=detailed"
 RUN echo "Unit tests succesed."
 
 FROM unit-tests AS publish

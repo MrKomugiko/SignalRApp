@@ -25,10 +25,10 @@
         <thead>
             <tr>
                 <th style="min-width:55px;">state</th>
-                <th style="min-width:100px;">@nameof(Item.name)</th>
-                <th style="min-width:200px;">@nameof(Item.value)</th>
-                <th style="min-width:200px;">@nameof(Item.created)</th>
-                <th style="min-width:200px;">@nameof(Item.updated)</th>
+                <th style="min-width:100px;">@nameof(Item.Name)</th>
+                <th style="min-width:200px;">@nameof(Item.Value)</th>
+                <th style="min-width:200px;">@nameof(Item.Created)</th>
+                <th style="min-width:200px;">@nameof(Item.Updated)</th>
                 <th style="width:100%;">Action</th>
             </tr>
         </thead>
@@ -46,10 +46,10 @@
                        <div class="@lockIcon"></div>
 
                     </td>
-                    <td>@item.name</td>
-                    <td>@item.value</td>
-                    <td>@item.created</td>
-                    <td>@item.updated</td>
+                    <td>@item.Name</td>
+                    <td>@item.Value</td>
+                    <td>@item.Created</td>
+                    <td>@item.Updated</td>
                     <td>
                         @if(isLocekd == false)
                         {
@@ -153,7 +153,7 @@
         //var requestContent = new StringContent(serializedDoc, Encoding.UTF8, "application/json-patch+json");
         //var response = await _http.PatchAsync($"Items?Id={item.Id}", requestContent);
 
-        item.value = newValue.ToString();
+        item.Value = newValue.ToString();
         var response = await _http.PostAsJsonAsync<Item>($"Items?Id={item.Id}", item);
 
     }
