@@ -24,9 +24,9 @@ jobs:
         uses: docker/setup-buildx-action@v2
       - name: Build Docker image
         run: |
-          docker buildx build -t ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:test -f ./SignalRApp/Server/Dockerfile .
+          docker buildx build -t signalr-app:test -f ./SignalRApp/Server/Dockerfile .
       - name: Save Docker image as tar
-        run: docker save ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:test -o myimage.tar
+        run: docker save signalr-app:test -o myimage.tar
       - name: Publish Docker image as artifact
         uses: actions/upload-artifact@v2
         with:
@@ -55,8 +55,8 @@ jobs:
           docker images -a
       - name: Push Docker image
         run: |
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:test ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:test
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:test
+          docker tag signalr-app:test ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
 
   deploy:
     needs: docker-push
@@ -70,11 +70,11 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Pull Docker image
         run: |
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:test
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
       - name: Deploy
         run: |
           # Zatrzymaj i usuń kontener jezeli istnieje
           docker stop blazor_signalrapp
           docker rm blazor_signalrapp
           # zamontuj i uruchom kontener
-          docker run -d -p 8080:80 --name blazor_signalrapp ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:test
+          docker run -d -p 8080:80 --name blazor_signalrapp ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
