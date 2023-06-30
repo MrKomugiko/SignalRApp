@@ -26,12 +26,12 @@ jobs:
         run: |
           docker buildx build -t ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest -f ./SignalRApp/Server/Dockerfile .
       - name: Save Docker image as tar
-        run: docker save ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest -o tmp/myimage.tar
+        run: docker save ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest -o myimage.tar
       - name: Publish Docker image as artifact
         uses: actions/upload-artifact@v2
         with:
           name: myimage
-          path: /tmp/myimage.tar
+          path: myimage.tar
           
   docker-push:
     needs: build-docker
@@ -47,11 +47,11 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: myimage
-          path: /tmp
+          path: .
       - name: Load Docker image
         id: load-image
         run: |
-          docker load --input /tmp/myimage.tar
+          docker load --input myimage.tar
           docker images
       - name: Push Docker image
         run: |
