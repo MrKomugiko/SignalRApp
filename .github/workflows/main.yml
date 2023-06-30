@@ -26,7 +26,7 @@ jobs:
         run: |
           docker buildx build -t ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest -f ./SignalRApp/Server/Dockerfile .
       - name: Save Docker image as tar
-        run: docker save ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest -o /tmp/myimage.tar
+        run: docker save ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest -o tmp/myimage.tar
       - name: Publish Docker image as artifact
         uses: actions/upload-artifact@v2
         with:
