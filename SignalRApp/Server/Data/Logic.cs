@@ -11,6 +11,6 @@ public class Logic : ILogic
 
     public int CustomAlgoritm(int a)
     {
-       return (a + 1) * a + 20;
+       return (a + 1) * a + 10;
     }
 }

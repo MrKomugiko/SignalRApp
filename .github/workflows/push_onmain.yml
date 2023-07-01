@@ -1,0 +1,108 @@
+name: push-on-master
+
+env:
+  IMAGE_TAG: ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
+
+on:
+  push:
+    branches:
+      - "master"
+
+env:
+  IMAGE_TAG: ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
+  condition_push_or_approved_pr: >
+   if [[ ( github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true ) == 'false' ]]; 
+    then
+      exit 1
+   fi
+    
+  windows_condition_push_or_approved_pr: >
+    if (($env:GITHUB_EVENT_NAME -eq 'pull_request' -and $env:GITHUB_EVENT_ACTION -eq 'closed' -and $env:GITHUB_EVENT_PULL_REQUEST_MERGED -eq 'true') -eq 'false') 
+    {
+      exit 1
+    }
+
+jobs:
+  build-docker:
+    runs-on:
+      labels: ASUS-MRKOMUGIKO
+    steps:
+      # Fetch pr or pushed code from github
+      - name: Checkout
+        uses: actions/checkout@v3
+      # Login to docker hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      #setup
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      # Buid docker image
+      - name: Build Docker image
+        run: |
+          docker buildx build -t ${{ env.IMAGE_TAG }} -f ./SignalRApp/Server/Dockerfile . --load
+          docker images -a        
+      # Archive and persist the Docker image
+      - name: Save Docker image
+        run: docker save --output image.tar ${{ env.IMAGE_TAG }}
+      # push docker artifact tar image to server allow it download in next job
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v2
+        with:
+          name: docker-image
+          path: image.tar
+          retention-days: 1
+
+  push:
+    needs: build-docker
+    runs-on:
+      labels: ASUS-MRKOMUGIKO
+
+    steps:
+      # Login to docker hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # Load and un-archive the Docker image
+      - name: Download Docker image
+        uses: actions/download-artifact@v2
+        with:
+          name: docker-image
+      # Install docker image from artifact .tar
+      - name: Load Docker image
+        run: docker load --input image.tar
+      # Push image to docker
+      - name: Publish Docker image
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_PASS: ${{ secrets.DOCKERHUB_PASS }}
+        run: docker push ${{ env.IMAGE_TAG }}
+        
+  deploy:
+    needs: push
+    runs-on:
+      labels: ASUS-MRKOMUGIKO
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: clear unused container
+        run: |
+          # Opcjonalnie
+          docker container prune -f
+      - name: Pull Docker image
+        run: |
+          docker pull ${{ env.IMAGE_TAG }}
+      - name: Deploy
+        run: |
+          # Zatrzymaj i usuń kontener jezeli istnieje
+          docker stop blazor_signalrapp
+          docker rm blazor_signalrapp
+          # zamontuj i uruchom kontener
+          docker run -d -p 8080:80 --name blazor_signalrapp ${{ env.IMAGE_TAG }}
