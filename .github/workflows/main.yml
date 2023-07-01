@@ -28,6 +28,8 @@ jobs:
           docker images -a
       - name: Save Docker image as tar
         run: docker save signalr-app:latest -o myimage.tar
+      - name: Verify Docker image tar
+        run: ls -l myimage.tar
       - name: Publish Docker image as artifact
         uses: actions/upload-artifact@v2
         with:
