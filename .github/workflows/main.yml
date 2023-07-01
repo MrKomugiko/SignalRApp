@@ -27,7 +27,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       # Buid docker image
       - name: Build Docker image
-        run: docker build -t "${IMAGE_TAG}" -f "./SignalRApp/Server/Dockerfile" .
+        run: docker buildx build -t "${IMAGE_TAG}" -f ./SignalRApp/Server/Dockerfile .
       # Archive and persist the Docker image
       - name: Save Docker image
         run: docker save --output image.tar "${IMAGE_TAG}"
