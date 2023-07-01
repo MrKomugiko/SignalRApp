@@ -7,15 +7,15 @@ public class LogicTests
     [Fact]
     public void CustomAlgoritm_ShouldReturnCorrectValue()
     {
-        // (_1+1)*_1+10 = 12
-        // (_2+1)*_2+10 = 16
-        // (_3+1)*_3+10 = 22
+        // (_1+1)*_1+20 = 22
+        // (_2+1)*_2+20 = 26
+        // (_3+1)*_3+20 = 32
 
         ILogic _logic = new Logic();
 
-        Assert.True(_logic.CustomAlgoritm(1) == 12);
-        Assert.True(_logic.CustomAlgoritm(2) == 16);
-        Assert.True(_logic.CustomAlgoritm(3) == 22);
+        Assert.True(_logic.CustomAlgoritm(1) == 22);
+        Assert.True(_logic.CustomAlgoritm(2) == 26);
+        Assert.True(_logic.CustomAlgoritm(3) == 32);
 
     }
 
