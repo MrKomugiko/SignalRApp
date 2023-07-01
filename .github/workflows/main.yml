@@ -27,7 +27,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       # Buid docker image
       - name: Build Docker image
-        run: docker build --tag "${IMAGE_TAG}" .
+        run: docker build --tag "${IMAGE_TAG}" -f ./SignalRApp/Server/Dockerfile .
       # Archive and persist the Docker image
       - name: Save Docker image
         run: docker save --output image.tar "${IMAGE_TAG}"
@@ -67,7 +67,7 @@ jobs:
         run: docker push "${IMAGE_TAG}"
         
   deploy:
-    needs: build-docker
+    needs: push
     runs-on:
       labels: ASUS-MRKOMUGIKO
     steps:
