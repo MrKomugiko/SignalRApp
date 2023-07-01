@@ -11,13 +11,17 @@ on:
 env:
   IMAGE_TAG: ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
   condition_push_or_approved_pr: >
-    github.event_name == 'push' || 
-    (
-      github.event_name == 'pull_request' && 
-      github.event.action == 'closed' && 
-      github.event.pull_request.merged == true
-    )
+   if [[ ( github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true ) == 'false' ]]; 
+    then
+      exit 1
+   fi
     
+  windows_condition_push_or_approved_pr: >
+    if (($env:GITHUB_EVENT_NAME -eq 'pull_request' -and $env:GITHUB_EVENT_ACTION -eq 'closed' -and $env:GITHUB_EVENT_PULL_REQUEST_MERGED -eq 'true') -eq 'false') 
+    {
+      exit 1
+    }
+
 jobs:
   build-docker:
     runs-on:
@@ -41,10 +45,8 @@ jobs:
           docker buildx build -t ${{ env.IMAGE_TAG }} -f ./SignalRApp/Server/Dockerfile . --load
           docker images -a
       - name: check if is a push or pr
-        run: |
-          if [[ ${{ env.condition_push_or_approved_pr }} == 'true' ]]; then
-            exit 1
-          fi
+        run: ${{ env.windows_condition_push_or_approved_pr }}
+         
       # Archive and persist the Docker image
       - name: Save Docker image
         run: docker save --output image.tar ${{ env.IMAGE_TAG }}
