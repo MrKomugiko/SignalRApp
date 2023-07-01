@@ -1,4 +1,7 @@
-name: ci
+name: push-on-master
+
+env:
+  IMAGE_TAG: ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
 
 on:
   push:

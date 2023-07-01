@@ -1,10 +1,12 @@
-name: ci
+name: pr-on-master
+
+env:
+  IMAGE_TAG: ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
 
 on:
   pull_request:
     branches:
       - "master"
-
 jobs:
   build-docker:
     runs-on:
