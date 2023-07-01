@@ -10,7 +10,14 @@ on:
 
 env:
   IMAGE_TAG: ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
-  
+  condition_push_or_approved_pr: >
+    github.event_name == 'push' || 
+    (
+      github.event_name == 'pull_request' && 
+      github.event.action == 'closed' && 
+      github.event.pull_request.merged == true
+    )
+    
 jobs:
   build-docker:
     runs-on:
@@ -33,11 +40,17 @@ jobs:
         run: |
           docker buildx build -t ${{ env.IMAGE_TAG }} -f ./SignalRApp/Server/Dockerfile . --load
           docker images -a
+      - name: check if is a push or pr
+        run: |
+          if [[ ${{ env.condition_push_or_approved_pr }} == 'true' ]]; then
+            exit 1
+          fi
       # Archive and persist the Docker image
       - name: Save Docker image
         run: docker save --output image.tar ${{ env.IMAGE_TAG }}
       # push docker artifact tar image to server allow it download in next job
       - name: Upload Docker image
+        if: ${{ env.condition_push_or_approved_pr }}
         uses: actions/upload-artifact@v2
         with:
           name: docker-image
