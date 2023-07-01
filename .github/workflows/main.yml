@@ -32,7 +32,7 @@ jobs:
       - name: Build Docker image
         run: |
           docker buildx build -t ${{ env.IMAGE_TAG }} -f ./SignalRApp/Server/Dockerfile .
-      # docker buildx build -t $IMAGE_TAG -f ./SignalRApp/Server/Dockerfile .
+          docker images -a
       # Archive and persist the Docker image
       - name: Save Docker image
         run: docker save --output image.tar ${{ env.IMAGE_TAG }}
