@@ -25,11 +25,8 @@ jobs:
       - name: Build Docker image
         run: |
           docker buildx build -t signalr-app:latest -f ./SignalRApp/Server/Dockerfile .
-          docker images -a
       - name: Save Docker image as tar
         run: docker save signalr-app:latest -o myimage.tar
-      - name: Verify Docker image tar
-        run: ls -l myimage.tar
       - name: Publish Docker image as artifact
         uses: actions/upload-artifact@v2
         with:
@@ -55,12 +52,11 @@ jobs:
         id: load-image
         run: |
           docker load --input myimage.tar
-          docker images -a
+          docker images
       - name: Push Docker image
         run: |
-          docker tag signalr-app:latest ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
+          docker tag ${{ steps.load-image.outputs.stdout }} ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
-          docker images -a
   deploy:
     needs: docker-push
     runs-on:
@@ -71,6 +67,10 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: clear unused container
+        run: |
+          # Opcjonalnie
+          docker container prune -f
       - name: Pull Docker image
         run: |
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
