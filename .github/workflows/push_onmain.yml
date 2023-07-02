@@ -8,6 +8,20 @@ on:
     branches:
       - "master"
 
+env:
+  IMAGE_TAG: ${{ secrets.DOCKERHUB_USERNAME }}/signalr-app:latest
+  condition_push_or_approved_pr: >
+   if [[ ( github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true ) == 'false' ]]; 
+    then
+      exit 1
+   fi
+    
+  windows_condition_push_or_approved_pr: >
+    if (($env:GITHUB_EVENT_NAME -eq 'pull_request' -and $env:GITHUB_EVENT_ACTION -eq 'closed' -and $env:GITHUB_EVENT_PULL_REQUEST_MERGED -eq 'true') -eq 'false') 
+    {
+      exit 1
+    }
+
 jobs:
   build-docker:
     runs-on:
@@ -45,6 +59,7 @@ jobs:
     needs: build-docker
     runs-on:
       labels: ASUS-MRKOMUGIKO
+
     steps:
       # Login to docker hub
       - name: Login to Docker Hub
