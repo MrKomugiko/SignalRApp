@@ -15,12 +15,6 @@ public class StorageServiceTests
     public void AllItems_AllItemsHasUniqueGuidId_ShouldBeTrue()
     {
         Storage _storage = new();
-        Assert.True(_storage.AllItems.DistinctBy(x=>x.Id).Count() == _storage.AllItems.Count);
-    }
-
-    [Fact]
-    public void Error()
-    {
-        Assert.True(true);
+        Assert.True(_storage.AllItems.DistinctBy(x => x.Id).Count() == _storage.AllItems.Count);
     }
 }
